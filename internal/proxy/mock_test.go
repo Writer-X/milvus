@@ -522,6 +522,16 @@ func generateBinaryVectors(numRows, dim int) []byte {
 	return ret
 }
 
+func generateFloat16Vectors(numRows, dim int) []byte {
+	total := numRows * dim * 2
+	ret := make([]byte, total)
+	_, err := rand.Read(ret)
+	if err != nil {
+		panic(err)
+	}
+	return ret
+}
+
 func generateVarCharArray(numRows int, maxLen int) []string {
 	ret := make([]string, numRows)
 	for i := 0; i < numRows; i++ {
@@ -650,6 +660,21 @@ func newBinaryVectorFieldData(fieldName string, numRows, dim int) *schemapb.Fiel
 				Dim: int64(dim),
 				Data: &schemapb.VectorField_BinaryVector{
 					BinaryVector: generateBinaryVectors(numRows, dim),
+				},
+			},
+		},
+	}
+}
+
+func newFloat16VectorFieldData(fieldName string, numRows, dim int) *schemapb.FieldData {
+	return &schemapb.FieldData{
+		Type:      schemapb.DataType_FloatVector,
+		FieldName: fieldName,
+		Field: &schemapb.FieldData_Vectors{
+			Vectors: &schemapb.VectorField{
+				Dim: int64(dim),
+				Data: &schemapb.VectorField_Float16Vector{
+					Float16Vector: generateFloat16Vectors(numRows, dim),
 				},
 			},
 		},

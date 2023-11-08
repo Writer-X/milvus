@@ -42,6 +42,7 @@ func TestInsertTask_CheckAligned(t *testing.T) {
 	floatVectorFieldSchema := &schemapb.FieldSchema{DataType: schemapb.DataType_FloatVector}
 	binaryVectorFieldSchema := &schemapb.FieldSchema{DataType: schemapb.DataType_BinaryVector}
 	varCharFieldSchema := &schemapb.FieldSchema{DataType: schemapb.DataType_VarChar}
+	float16VectorFieldSchema := &schemapb.FieldSchema{DataType: schemapb.DataType_Float16Vector}
 
 	numRows := 20
 	dim := 128
@@ -71,6 +72,7 @@ func TestInsertTask_CheckAligned(t *testing.T) {
 				floatVectorFieldSchema,
 				binaryVectorFieldSchema,
 				varCharFieldSchema,
+				float16VectorFieldSchema,
 			},
 		},
 	}
@@ -88,6 +90,7 @@ func TestInsertTask_CheckAligned(t *testing.T) {
 		newFloatVectorFieldData("FloatVector", numRows, dim),
 		newBinaryVectorFieldData("BinaryVector", numRows, dim),
 		newScalarFieldData(varCharFieldSchema, "VarChar", numRows),
+		newFloat16VectorFieldData("Float16Vector", numRows, dim),
 	}
 	err = case2.insertMsg.CheckAligned()
 	assert.NoError(t, err)
@@ -219,6 +222,19 @@ func TestInsertTask_CheckAligned(t *testing.T) {
 	assert.Error(t, err)
 	// revert
 	case2.insertMsg.FieldsData[8] = newScalarFieldData(varCharFieldSchema, "VarChar", numRows)
+	err = case2.insertMsg.CheckAligned()
+	assert.NoError(t, err)
+
+	// less float16 vectors
+	case2.insertMsg.FieldsData[9] = newFloat16VectorFieldData("Float16Vector", numRows/2, dim)
+	err = case2.insertMsg.CheckAligned()
+	assert.Error(t, err)
+	// more float16 vectors
+	case2.insertMsg.FieldsData[9] = newFloat16VectorFieldData("Float16Vector", numRows*2, dim)
+	err = case2.insertMsg.CheckAligned()
+	assert.Error(t, err)
+	// revert
+	case2.insertMsg.FieldsData[9] = newFloat16VectorFieldData("Float16Vector", numRows, dim)
 	err = case2.insertMsg.CheckAligned()
 	assert.NoError(t, err)
 }
